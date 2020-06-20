@@ -61,7 +61,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="InputMasks.cs" />
+    <Compile Include="N3DSInputs.cs" />
     <Compile Include="Utils\None.cs" />
     <Compile Include="Utils\Option.cs" />
     <Compile Include="Utils\Some.cs" />

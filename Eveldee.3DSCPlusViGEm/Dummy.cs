@@ -157,14 +157,17 @@ namespace MarcusD._3DSCPlusDummy
                         if (Math.Abs(sx) < deadzone) sx = 0;
                         if (Math.Abs(sy) < deadzone) sy = 0;
 
-                        if (Debug) Console.WriteLine($"[IN] K: {currkey:X8} T: {tx:+000;-000;0000}x{ty:+000;-000;0000} C: {cx:+000;-000;0000}x{cy:+000;-000;0000} S: {sx:+000;-000;0000}x{sy:+000;-000;0000}");
+                        //if (Debug) Console.WriteLine($"[IN] K: {currkey:X8} T: {tx:+000;-000;0000}x{ty:+000;-000;0000} C: {cx:+000;-000;0000}x{cy:+000;-000;0000} S: {sx:+000;-000;0000}x{sy:+000;-000;0000}");
+
+                        N3DSInputs inputs = (N3DSInputs)currkey;
+                        if (Debug) Console.WriteLine($"[Inputs] {inputs}");
 
                         StateChanged?.Invoke(this, new DummyState()
                         {
-                            Inputs = CreateInputFromKey(currkey, cx, cy, sx, sy),
+                            Inputs = CreateStateFromInputs(inputs, cx, cy, sx, sy),
                             Touch = new DummyState.TouchState()
                             {
-                                IsTouch = IsPressed(InputMasks.Touch, currkey),
+                                IsTouch = IsPressed(N3DSInputs.Touch, inputs),
                                 TouchX = tx,
                                 TouchY = ty
                             }
@@ -177,16 +180,17 @@ namespace MarcusD._3DSCPlusDummy
 
                     case 0x7E: // KeyDownEx (osu!C)
                         currkey = buf[4] | (buf[5] << 8) | (buf[6] << 16) | (buf[7] << 24);
-                        cx = KeyToAxis(currkey, InputMasks.LeftStickLeft, InputMasks.LeftStickRight);
-                        cy = KeyToAxis(currkey, InputMasks.LeftStickDown, InputMasks.LeftStickUp);
-                        sx = KeyToAxis(currkey, InputMasks.RightStickLeft, InputMasks.RightStickRight);
-                        sy = KeyToAxis(currkey, InputMasks.RightStickDown, InputMasks.RightStickUp);
+                        inputs = (N3DSInputs)currkey;
+                        cx = KeyToAxis(inputs, N3DSInputs.LeftStickLeft, N3DSInputs.LeftStickRight);
+                        cy = KeyToAxis(inputs, N3DSInputs.LeftStickDown, N3DSInputs.LeftStickUp);
+                        sx = KeyToAxis(inputs, N3DSInputs.RightStickLeft, N3DSInputs.RightStickRight);
+                        sy = KeyToAxis(inputs, N3DSInputs.RightStickDown, N3DSInputs.RightStickUp);
 
-                        if (Debug) Console.WriteLine($"[KX] K: {currkey:X8}");
+                        if (Debug) Console.WriteLine($"[KX] K: {currkey:X8} Inputs: {inputs}");
 
                         StateChanged?.Invoke(this, new DummyState()
                         {
-                            Inputs = CreateInputFromKey(currkey, cx, cy, sx, sy)
+                            Inputs = CreateStateFromInputs(inputs, cx, cy, sx, sy)
                         });
 
                         break;
@@ -243,17 +247,17 @@ namespace MarcusD._3DSCPlusDummy
             Disconnected?.Invoke(this);
         }
 
-        private bool IsPressed(int mask, int currkey)
+        private bool IsPressed(N3DSInputs input, N3DSInputs inputs)
         {
-            return (mask & currkey) != 0;
+            return inputs.HasFlag(input);
         }
 
-        private short KeyToAxis(int currkey, int low, int high)
+        private short KeyToAxis(N3DSInputs inputs, N3DSInputs low, N3DSInputs high)
         {
-            return (short)(IsPressed(high, currkey) ? 156 : (IsPressed(low, currkey) ? -156 : 0));
+            return (short)(IsPressed(high, inputs) ? 156 : (IsPressed(low, inputs) ? -156 : 0));
         }
 
-        private DummyState.InputState CreateInputFromKey(int key, short cx, short cy, short sx, short sy)
+        private DummyState.InputState CreateStateFromInputs(N3DSInputs inputs, short cx, short cy, short sx, short sy)
         {
             return new DummyState.InputState()
             {
@@ -263,25 +267,25 @@ namespace MarcusD._3DSCPlusDummy
                 RightStickX = sx,
                 RightStickY = sy,
 
-                A = IsPressed(InputMasks.A, key),
-                B = IsPressed(InputMasks.B, key),
-                X = IsPressed(InputMasks.X, key),
-                Y = IsPressed(InputMasks.Y, key),
+                A = IsPressed(N3DSInputs.A, inputs),
+                B = IsPressed(N3DSInputs.B, inputs),
+                X = IsPressed(N3DSInputs.X, inputs),
+                Y = IsPressed(N3DSInputs.Y, inputs),
 
-                Left = IsPressed(InputMasks.Left, key),
-                Up = IsPressed(InputMasks.Up, key),
-                Right = IsPressed(InputMasks.Right, key),
-                Down = IsPressed(InputMasks.Down, key),
+                Left = IsPressed(N3DSInputs.Left, inputs),
+                Up = IsPressed(N3DSInputs.Up, inputs),
+                Right = IsPressed(N3DSInputs.Right, inputs),
+                Down = IsPressed(N3DSInputs.Down, inputs),
 
-                L = IsPressed(InputMasks.L, key),
-                R = IsPressed(InputMasks.R, key),
-                ZL = IsPressed(InputMasks.ZL, key),
-                ZR = IsPressed(InputMasks.ZR, key),
+                L = IsPressed(N3DSInputs.L, inputs),
+                R = IsPressed(N3DSInputs.R, inputs),
+                ZL = IsPressed(N3DSInputs.ZL, inputs),
+                ZR = IsPressed(N3DSInputs.ZR, inputs),
 
-                Start = IsPressed(InputMasks.Start, key),
-                Select = IsPressed(InputMasks.Select, key),
+                Start = IsPressed(N3DSInputs.Start, inputs),
+                Select = IsPressed(N3DSInputs.Select, inputs),
 
-                IsTouch = IsPressed(InputMasks.Touch, key)
+                IsTouch = IsPressed(N3DSInputs.Touch, inputs)
             };
         }
     }
