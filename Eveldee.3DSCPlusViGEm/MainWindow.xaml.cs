@@ -15,6 +15,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using YamlDotNet.Serialization;
 
 namespace Eveldee._3DSCPlusViGEm
 {
@@ -23,14 +24,21 @@ namespace Eveldee._3DSCPlusViGEm
     /// </summary>
     public partial class MainWindow : Window
     {
-        public const string SettingsPath = "ip.txt";
+        public const string SettingsPath = "settings.yaml";
 
         private bool _isActivated = false;
         private readonly Controller _controller;
 
+        private Settings _settings;
+        private readonly Serializer _serializer;
+        private readonly Deserializer _deserializer;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            _serializer = new Serializer();
+            _deserializer = new Deserializer();
 
             LoadSettings();
 
@@ -43,19 +51,27 @@ namespace Eveldee._3DSCPlusViGEm
         {
             if (File.Exists(SettingsPath))
             {
-                string ip = File.ReadAllText(SettingsPath).Trim();
+                string text = File.ReadAllText(SettingsPath);
+                _settings = _deserializer.Deserialize<Settings>(text);
 
-                if (IPAddress.TryParse(ip, out var iPAddress))
+                if (IPAddress.TryParse(_settings.IP, out var _))
                 {
-                    Txt_IP.Text = ip;
+                    Txt_IP.Text = _settings.IP;
                 }
             }
+            else
+            {
+                _settings = new Settings();
+            }
         }
+
         private async Task SaveSettings()
         {
             using (var file = File.CreateText(SettingsPath))
             {
-                await file.WriteLineAsync(Txt_IP.Text);
+                string text = _serializer.Serialize(_settings);
+
+                await file.WriteAsync(text);
             }
         }
 
@@ -89,6 +105,7 @@ namespace Eveldee._3DSCPlusViGEm
                 return;
             }
 
+            _settings.IP = Txt_IP.Text;
             await SaveSettings();
 
             Btn_Toggle.IsEnabled = false;
