@@ -50,14 +50,17 @@ namespace Eveldee._3DSCPlusViGEm
                 Running = true
             };
 
-            _ = Task.Run(() => _dummy.HandleLoop());
-
             _connectToken = new CancellationTokenSource();
 
-            _dummy.Connected += (d) => _connectToken.Cancel();
+            Dummy.ConnectedHandler handler = (d) => _connectToken.Cancel();
+            _dummy.Connected += handler;
             _dummy.StateChanged += OnStateChanged;
 
+            _ = Task.Run(() => _dummy.HandleLoop());
+
             await Task.Delay(-1, _connectToken.Token).ContinueWith((t) => { });
+
+            _dummy.Connected -= handler;
         }
 
         private void OnStateChanged(Dummy source, DummyState dummyState)
@@ -106,15 +109,20 @@ namespace Eveldee._3DSCPlusViGEm
 
         public async Task Stop()
         {
-            _ = Task.Run(() => _controller.Disconnect());
+            _dummy.StateChanged -= OnStateChanged;
 
-            _dummy.Running = false;
+            _ = Task.Run(() => _controller.Disconnect());
 
             _disconnectToken = new CancellationTokenSource();
 
-            _dummy.Disconnected += (d) => _disconnectToken.Cancel();
+            Dummy.DisconnectedHandler handler = (d) => _disconnectToken.Cancel();
+            _dummy.Disconnected += handler;
+
+            _dummy.Running = false;
 
             await Task.Delay(-1, _disconnectToken.Token).ContinueWith((t) => { });
+
+            _dummy.Disconnected -= handler;
         }
     }
 }
