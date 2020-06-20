@@ -12,8 +12,11 @@ It perfectly emulates an **Xbox360** controller using [**ViGem**](https://github
 ## Usage
 
 Just run it, enter your **3DS** IP address (you can see it on the 3DS top screen while running PaintController)  
-Click on **Connect**, Windows should tell you that it's configuring the **Xbox360** controller, and you're ready to go!  
-It should even works using multiple **3DS**, just run it for each **3DS** (not tested)
+Click on **Connect**, Windows should tell you that it's configuring the **Xbox360** controller, and you're ready to go! 
+
+**Note:**
+- Inputs follow **Xbox360** layout: X/Y and A/B are reversed
+- It should even works using multiple **3DS**, just run it for each **3DS** (not tested)
 
 ## Roadmap
 
