@@ -1,7 +1,7 @@
 # Eveldee.3DSCPlusViGEm
 
 This is a **Windows** client for [**3DSController+**](https://github.com/SonoSooS/3DSCPlus)  
-It perfectly emulates an **Xbox360** controller using [**ViGem**](https://github.com/ViGEm/ViGEmBus)
+It perfectly emulates an **Xbox360**/**DS4** controller using [**ViGem**](https://github.com/ViGEm/ViGEmBus)
 
 ## Installation
 
@@ -12,17 +12,17 @@ It perfectly emulates an **Xbox360** controller using [**ViGem**](https://github
 ## Usage
 
 Just run it, enter your **3DS** IP address (you can see it on the 3DS top screen while running PaintController)  
-Click on **Connect**, Windows should tell you that it's configuring the **Xbox360** controller, and you're ready to go! 
+Click on **Connect**, Windows should tell you that it's configuring the **Xbox360**/**DS4** controller, and you're ready to go! 
 
 **Note:**
-- Inputs follow **Xbox360** layout: X/Y and A/B are reversed
+- Inputs follow position layout: **Xbox360** X/Y and A/B are reversed (can be configured)
 - It should even works using multiple **3DS**, just run it for each **3DS** (not tested)
 
 ## Roadmap
 
 - [x] Emulate DS4 controller (useful for PS4 Remote Play)
-- [x] Key mapping configuration
-- [ ] Axis settings (inverted, deadzone, ...)
+- [x] Key mappings configuration
+- [x] Axis settings (inverted, deadzone)
 - [ ] Touch screen mapping configuration
 
 ## Contributing
