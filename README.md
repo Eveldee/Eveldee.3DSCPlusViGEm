@@ -21,7 +21,8 @@ Click on **Connect**, Windows should tell you that it's configuring the **Xbox36
 ## Roadmap
 
 - [x] Emulate DS4 controller (useful for PS4 Remote Play)
-- [ ] Key mapping configuration
+- [x] Key mapping configuration
+- [ ] Axis settings (inverted, deadzone, ...)
 - [ ] Touch screen mapping configuration
 
 ## Contributing
