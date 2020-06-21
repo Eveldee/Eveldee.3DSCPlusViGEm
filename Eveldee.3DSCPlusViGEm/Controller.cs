@@ -107,7 +107,6 @@ namespace Eveldee._3DSCPlusViGEm
                     ds4.SetButtonState(DualShock4Button.Square, i.Y);
                     ds4.SetButtonState(DualShock4Button.Triangle, i.X);
 
-                    // TODO: set dpad
                     if (i.Up)
                     {
                         if (i.Left)
