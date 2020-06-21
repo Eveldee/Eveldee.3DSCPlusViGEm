@@ -26,6 +26,8 @@ namespace MarcusD._3DSCPlusDummy
         public const int PollTimeout = 3 * 1000 * 1000;
         public const bool Debug = true;
         public const ushort Port = 6956;
+        public const int MaxLeftAxisValue = 156;
+        public const int MaxRightAxisValue = 146;
 
         public bool Running { get; set; } = false;
         public Dictionary<N3DSInputs, N3DSInputs> KeyMap => MainWindow.Instance.KeyMap;
@@ -182,10 +184,10 @@ namespace MarcusD._3DSCPlusDummy
                     case 0x7E: // KeyDownEx (osu!C)
                         currkey = buf[4] | (buf[5] << 8) | (buf[6] << 16) | (buf[7] << 24);
                         inputs = (N3DSInputs)currkey;
-                        cx = KeyToAxis(inputs, N3DSInputs.LeftStickLeft, N3DSInputs.LeftStickRight);
-                        cy = KeyToAxis(inputs, N3DSInputs.LeftStickDown, N3DSInputs.LeftStickUp);
-                        sx = KeyToAxis(inputs, N3DSInputs.RightStickLeft, N3DSInputs.RightStickRight);
-                        sy = KeyToAxis(inputs, N3DSInputs.RightStickDown, N3DSInputs.RightStickUp);
+                        cx = KeyToAxis(inputs, N3DSInputs.LeftStickLeft, N3DSInputs.LeftStickRight, MaxLeftAxisValue);
+                        cy = KeyToAxis(inputs, N3DSInputs.LeftStickDown, N3DSInputs.LeftStickUp, MaxLeftAxisValue);
+                        sx = KeyToAxis(inputs, N3DSInputs.RightStickLeft, N3DSInputs.RightStickRight, MaxRightAxisValue);
+                        sy = KeyToAxis(inputs, N3DSInputs.RightStickDown, N3DSInputs.RightStickUp, MaxRightAxisValue);
 
                         if (Debug) Console.WriteLine($"[KX] K: {currkey:X8} Inputs: {inputs}");
 
@@ -253,9 +255,9 @@ namespace MarcusD._3DSCPlusDummy
             return inputs.HasFlag(KeyMap[input]);
         }
 
-        private short KeyToAxis(N3DSInputs inputs, N3DSInputs low, N3DSInputs high)
+        private short KeyToAxis(N3DSInputs inputs, N3DSInputs low, N3DSInputs high, int value)
         {
-            return (short)(IsPressed(high, inputs) ? 156 : (IsPressed(low, inputs) ? -156 : 0));
+            return (short)(IsPressed(high, inputs) ? value : (IsPressed(low, inputs) ? -value : 0));
         }
 
         private DummyState.InputState CreateStateFromInputs(N3DSInputs inputs, short cx, short cy, short sx, short sy)
