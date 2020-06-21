@@ -43,7 +43,7 @@ namespace Eveldee._3DSCPlusViGEm
 
         public async Task Start(IPAddress iPAddress)
         {
-            _controller = MainWindow.Settings.TargetType == TargetType.Xbox360 ? (IVirtualGamepad)_viGEmClient.CreateXbox360Controller() : _viGEmClient.CreateDualShock4Controller();
+            _controller = MainWindow.Instance.Settings.TargetType == TargetType.Xbox360 ? (IVirtualGamepad)_viGEmClient.CreateXbox360Controller() : _viGEmClient.CreateDualShock4Controller();
             _controller.AutoSubmitReport = false;
             _controller.Connect();
 
@@ -92,9 +92,11 @@ namespace Eveldee._3DSCPlusViGEm
 
                     xbox360.SetAxisValue(Xbox360Axis.LeftThumbX, (short)(i.LeftStickX * LeftStickMultiplier));
                     xbox360.SetAxisValue(Xbox360Axis.LeftThumbY, (short)(i.LeftStickY * LeftStickMultiplier));
+                    xbox360.SetButtonState(Xbox360Button.LeftThumb, i.LeftStick);
 
                     xbox360.SetAxisValue(Xbox360Axis.RightThumbX, (short)(i.RightStickX * RightStickMultiplier));
                     xbox360.SetAxisValue(Xbox360Axis.RightThumbY, (short)(i.RightStickY * RightStickMultiplier));
+                    xbox360.SetButtonState(Xbox360Button.RightThumb, i.RightStick);
 
                     xbox360.SetButtonState(Xbox360Button.Guide, i.IsTouch);
                 }
@@ -162,9 +164,11 @@ namespace Eveldee._3DSCPlusViGEm
 
                     ds4.SetAxisValue(DualShock4Axis.LeftThumbX.Id, (short)(i.LeftStickX * LeftStickMultiplier));
                     ds4.SetAxisValue(DualShock4Axis.LeftThumbY.Id, (short)(i.LeftStickY * LeftStickMultiplier * -1));
+                    ds4.SetButtonState(DualShock4Button.ThumbLeft, i.LeftStick);
 
                     ds4.SetAxisValue(DualShock4Axis.RightThumbX.Id, (short)(i.RightStickX * RightStickMultiplier));
                     ds4.SetAxisValue(DualShock4Axis.RightThumbY.Id, (short)(i.RightStickY * RightStickMultiplier * -1));
+                    ds4.SetButtonState(DualShock4Button.ThumbRight, i.RightStick);
 
                     ds4.SetButtonState(DualShock4SpecialButton.Ps, i.IsTouch);
                 }

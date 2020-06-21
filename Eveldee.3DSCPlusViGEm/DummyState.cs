@@ -13,9 +13,11 @@ namespace Eveldee._3DSCPlusViGEm
         {
             public short LeftStickX { get; set; }
             public short LeftStickY { get; set; }
+            public bool LeftStick { get; set; }
 
             public short RightStickX { get; set; }
             public short RightStickY { get; set; }
+            public bool RightStick { get; set; }
 
             public bool Left { get; set; }
             public bool Up { get; set; }
@@ -47,8 +49,6 @@ namespace Eveldee._3DSCPlusViGEm
 
         public Option<InputState> Inputs { get; set; }
         public Option<TouchState> Touch { get; set; }
-
-
 
         public DummyState()
         {

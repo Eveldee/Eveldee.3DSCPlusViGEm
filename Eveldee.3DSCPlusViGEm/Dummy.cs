@@ -28,6 +28,7 @@ namespace MarcusD._3DSCPlusDummy
         public const ushort Port = 6956;
 
         public bool Running { get; set; } = false;
+        public Dictionary<N3DSInputs, N3DSInputs> KeyMap => MainWindow.Instance.KeyMap;
 
         private bool dcexit = false;
         private int deadzone = 12;
@@ -249,7 +250,7 @@ namespace MarcusD._3DSCPlusDummy
 
         private bool IsPressed(N3DSInputs input, N3DSInputs inputs)
         {
-            return inputs.HasFlag(input);
+            return inputs.HasFlag(KeyMap[input]);
         }
 
         private short KeyToAxis(N3DSInputs inputs, N3DSInputs low, N3DSInputs high)
@@ -263,9 +264,11 @@ namespace MarcusD._3DSCPlusDummy
             {
                 LeftStickX = cx,
                 LeftStickY = cy,
+                LeftStick = IsPressed(N3DSInputs.LeftStick, inputs),
 
                 RightStickX = sx,
                 RightStickY = sy,
+                RightStick = IsPressed(N3DSInputs.RightStick, inputs),
 
                 A = IsPressed(N3DSInputs.A, inputs),
                 B = IsPressed(N3DSInputs.B, inputs),

@@ -9,15 +9,28 @@ namespace Eveldee._3DSCPlusViGEm
     [Flags]
     public enum N3DSInputs : int
     {
+        /// <summary>
+        /// This one will neve pass IsChecked, used to remove a binding
+        /// </summary>
+        None = -1,
+
         LeftStickLeft = 0x2000_0000,
         LeftStickUp = 0x4000_0000,
         LeftStickRight = 0x1000_0000,
         LeftStickDown = int.MinValue,
+        /// <summary>
+        /// This value can't be emitted, but it can be used with mapping
+        /// </summary>
+        LeftStick = 0x0000_1000,
 
         RightStickLeft = 0x0200_0000,
         RightStickUp = 0x0400_0000,
         RightStickRight = 0x0100_0000,
         RightStickDown = 0x0800_0000,
+        /// <summary>
+        /// This value can't be emitted, but it can be used with mapping
+        /// </summary>
+        RightStick = 0x0000_2000,
 
         A = 0x0000_0001,
         B = 0x0000_0002,

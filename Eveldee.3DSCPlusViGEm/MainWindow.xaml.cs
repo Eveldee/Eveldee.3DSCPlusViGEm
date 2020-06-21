@@ -25,27 +25,46 @@ namespace Eveldee._3DSCPlusViGEm
     public partial class MainWindow : Window
     {
         public const string SettingsPath = "Settings.yaml";
+        public const string KeyMapPath = "KeyMap.yaml";
+        public const string LogPath = "Logs.txt";
 
-        public static Settings Settings { get; set; }
+        public static MainWindow Instance { get; private set; }
+
+        public Settings Settings { get; private set; }
+        public Dictionary<N3DSInputs, N3DSInputs> KeyMap { get; private set; }
 
         private bool _isActivated = false;
         private readonly Controller _controller;
 
-        private Settings _settings;
         private readonly Serializer _serializer;
         private readonly Deserializer _deserializer;
+        private FileSystemWatcher _keyMapWatcher;
+        private object _keyMapLock = new object();
 
         public MainWindow()
         {
+            Instance = this;
+
             InitializeComponent();
 
             _serializer = new Serializer();
             _deserializer = new Deserializer();
 
-            LoadSettings();
+            try
+            {
+                LoadSettings();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Couldn't load settings: {e.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                File.AppendAllText(LogPath, $"{e.Message} \n");
+                File.AppendAllText(LogPath, e.StackTrace);
+
+                Environment.Exit(1);
+            }
 
             Picker_TargetType.ItemsSource = Enum.GetValues(typeof(TargetType));
-            Picker_TargetType.SelectedItem = _settings.TargetType;
+            Picker_TargetType.SelectedItem = Settings.TargetType;
 
             _controller = new Controller();
 
@@ -54,37 +73,111 @@ namespace Eveldee._3DSCPlusViGEm
 
         private void LoadSettings()
         {
+            // Load Settings
             if (File.Exists(SettingsPath))
             {
                 string text = File.ReadAllText(SettingsPath);
-                _settings = _deserializer.Deserialize<Settings>(text);
+                Settings = _deserializer.Deserialize<Settings>(text);
 
-                if (IPAddress.TryParse(_settings.IP, out var _))
+                if (IPAddress.TryParse(Settings.IP, out var _))
                 {
-                    Txt_IP.Text = _settings.IP;
+                    Txt_IP.Text = Settings.IP;
                 }
             }
             else
             {
-                _settings = new Settings();
+                Settings = new Settings();
             }
 
-            Settings = _settings;
+            // Load KeyMap
+            if (File.Exists(KeyMapPath))
+            {
+                string text = File.ReadAllText(KeyMapPath);
+
+                KeyMap = _deserializer.Deserialize<Dictionary<N3DSInputs, N3DSInputs>>(text);
+            }
+            else
+            {
+                KeyMap = new Dictionary<N3DSInputs, N3DSInputs>()
+                {
+                    { N3DSInputs.LeftStickLeft, N3DSInputs.LeftStickLeft },
+                    { N3DSInputs.LeftStickUp, N3DSInputs.LeftStickUp },
+                    { N3DSInputs.LeftStickRight, N3DSInputs.LeftStickRight },
+                    { N3DSInputs.LeftStickDown, N3DSInputs.LeftStickDown },
+                    { N3DSInputs.LeftStick, N3DSInputs.None },
+
+                    { N3DSInputs.RightStickLeft, N3DSInputs.RightStickLeft },
+                    { N3DSInputs.RightStickUp, N3DSInputs.RightStickUp },
+                    { N3DSInputs.RightStickRight, N3DSInputs.RightStickRight },
+                    { N3DSInputs.RightStickDown, N3DSInputs.RightStickDown },
+                    { N3DSInputs.RightStick, N3DSInputs.None },
+
+                    { N3DSInputs.A, N3DSInputs.A },
+                    { N3DSInputs.B, N3DSInputs.B },
+                    { N3DSInputs.X, N3DSInputs.X },
+                    { N3DSInputs.Y, N3DSInputs.Y },
+
+                    { N3DSInputs.Left, N3DSInputs.Left },
+                    { N3DSInputs.Up, N3DSInputs.Up },
+                    { N3DSInputs.Right, N3DSInputs.Right },
+                    { N3DSInputs.Down, N3DSInputs.Down },
+
+                    { N3DSInputs.L, N3DSInputs.L },
+                    { N3DSInputs.R, N3DSInputs.R },
+                    { N3DSInputs.ZL, N3DSInputs.ZL },
+                    { N3DSInputs.ZR, N3DSInputs.ZR },
+
+                    { N3DSInputs.Start, N3DSInputs.Start },
+                    { N3DSInputs.Select, N3DSInputs.Select },
+
+                    { N3DSInputs.Touch, N3DSInputs.Touch }
+                };
+
+                File.WriteAllText(KeyMapPath, _serializer.Serialize(KeyMap));
+            }
+
+            _keyMapWatcher = new FileSystemWatcher(Environment.CurrentDirectory, KeyMapPath)
+            {
+                NotifyFilter = NotifyFilters.LastWrite,
+                IncludeSubdirectories = false
+            };
+            _keyMapWatcher.Changed += OnKeyMapChange;
+            _keyMapWatcher.EnableRaisingEvents = true;
         }
 
         private async Task SaveSettings()
         {
             using (var file = File.CreateText(SettingsPath))
             {
-                string text = _serializer.Serialize(_settings);
+                string text = _serializer.Serialize(Settings);
 
                 await file.WriteAsync(text);
+            }
+        }
+
+        private void OnKeyMapChange(object sender, FileSystemEventArgs e)
+        {
+            // Note that softwares like Notepad++ fires this even 2 times, nothing much can be done about it
+            lock (_keyMapLock)
+            {
+                try
+                {
+                    string text = File.ReadAllText(KeyMapPath);
+
+                    KeyMap = _deserializer.Deserialize<Dictionary<N3DSInputs, N3DSInputs>>(text);
+                }
+                catch (Exception)
+                {
+                    // Just wait next event, happens when it's fired 2 times
+                    return;
+                }
             }
         }
 
         private void MainWindow_Closed(object sender, EventArgs e)
         {
             _controller.Dispose();
+            _keyMapWatcher.Dispose();
         }
 
         private async void Btn_Toggle_Click(object sender, RoutedEventArgs e)
@@ -112,8 +205,8 @@ namespace Eveldee._3DSCPlusViGEm
                 return;
             }
 
-            _settings.TargetType = (TargetType)Picker_TargetType.SelectedItem;
-            _settings.IP = Txt_IP.Text;
+            Settings.TargetType = (TargetType)Picker_TargetType.SelectedItem;
+            Settings.IP = Txt_IP.Text;
             await SaveSettings();
 
             Btn_Toggle.IsEnabled = false;
