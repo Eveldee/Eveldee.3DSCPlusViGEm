@@ -66,6 +66,7 @@
     </ApplicationDefinition>
     <Compile Include="N3DSInputs.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="StickSettings.cs" />
     <Compile Include="TargetType.cs" />
     <Compile Include="Utils\None.cs" />
     <Compile Include="Utils\Option.cs" />

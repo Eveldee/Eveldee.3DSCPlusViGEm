@@ -24,21 +24,23 @@ namespace Eveldee._3DSCPlusViGEm
     /// </summary>
     public partial class MainWindow : Window
     {
-        public const string SettingsPath = "Settings.yaml";
-        public const string KeyMapPath = "KeyMap.yaml";
+        public const string SettingsPath = "Settings.yml";
+        public const string KeyMapPath = "KeyMap.yml";
+        public const string StickSettingsPath = "Sticks.yml";
         public const string LogPath = "Logs.txt";
 
         public static MainWindow Instance { get; private set; }
 
         public Settings Settings { get; private set; }
         public Dictionary<N3DSInputs, N3DSInputs> KeyMap { get; private set; }
+        public StickSettings StickSettings { get; private set; }
 
         private bool _isActivated = false;
         private readonly Controller _controller;
 
         private readonly Serializer _serializer;
         private readonly Deserializer _deserializer;
-        private FileSystemWatcher _keyMapWatcher;
+        private FileSystemWatcher _settingsWatcher;
         private object _keyMapLock = new object();
 
         public MainWindow()
@@ -136,13 +138,27 @@ namespace Eveldee._3DSCPlusViGEm
                 File.WriteAllText(KeyMapPath, _serializer.Serialize(KeyMap));
             }
 
-            _keyMapWatcher = new FileSystemWatcher(Environment.CurrentDirectory, KeyMapPath)
+            // Load StickSettings
+            if (File.Exists(StickSettingsPath))
+            {
+                string text = File.ReadAllText(StickSettingsPath);
+
+                StickSettings = _deserializer.Deserialize<StickSettings>(text);
+            }
+            else
+            {
+                StickSettings = new StickSettings();
+
+                File.WriteAllText(StickSettingsPath, _serializer.Serialize(StickSettings));
+            }
+
+            _settingsWatcher = new FileSystemWatcher(Environment.CurrentDirectory, "*.yml")
             {
                 NotifyFilter = NotifyFilters.LastWrite,
                 IncludeSubdirectories = false
             };
-            _keyMapWatcher.Changed += OnKeyMapChange;
-            _keyMapWatcher.EnableRaisingEvents = true;
+            _settingsWatcher.Changed += OnKeyMapChange;
+            _settingsWatcher.EnableRaisingEvents = true;
         }
 
         private async Task SaveSettings()
@@ -157,14 +173,26 @@ namespace Eveldee._3DSCPlusViGEm
 
         private void OnKeyMapChange(object sender, FileSystemEventArgs e)
         {
-            // Note that softwares like Notepad++ fires this even 2 times, nothing much can be done about it
+            // Note that softwares like Notepad++ fires this event 2 times, nothing much can be done about it
             lock (_keyMapLock)
             {
                 try
                 {
-                    string text = File.ReadAllText(KeyMapPath);
+                    string text;
 
-                    KeyMap = _deserializer.Deserialize<Dictionary<N3DSInputs, N3DSInputs>>(text);
+                    switch (e.Name)
+                    {
+                        case KeyMapPath:
+                            text = File.ReadAllText(KeyMapPath);
+
+                            KeyMap = _deserializer.Deserialize<Dictionary<N3DSInputs, N3DSInputs>>(text);
+                            break;
+                        case StickSettingsPath:
+                            text = File.ReadAllText(StickSettingsPath);
+
+                            StickSettings = _deserializer.Deserialize<StickSettings>(text);
+                            break;
+                    }
                 }
                 catch (Exception)
                 {
@@ -177,7 +205,7 @@ namespace Eveldee._3DSCPlusViGEm
         private void MainWindow_Closed(object sender, EventArgs e)
         {
             _controller.Dispose();
-            _keyMapWatcher.Dispose();
+            _settingsWatcher.Dispose();
         }
 
         private async void Btn_Toggle_Click(object sender, RoutedEventArgs e)

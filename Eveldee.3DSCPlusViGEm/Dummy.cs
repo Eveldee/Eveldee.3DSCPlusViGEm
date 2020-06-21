@@ -31,9 +31,10 @@ namespace MarcusD._3DSCPlusDummy
 
         public bool Running { get; set; } = false;
         public Dictionary<N3DSInputs, N3DSInputs> KeyMap => MainWindow.Instance.KeyMap;
+        public StickSettings.AxisSettings LeftStickSettings => MainWindow.Instance.StickSettings.Left;
+        public StickSettings.AxisSettings RightStickSettings => MainWindow.Instance.StickSettings.Right;
 
         private bool dcexit = false;
-        private int deadzone = 12;
 
         private IPAddress _remoteIP;
 
@@ -89,7 +90,6 @@ namespace MarcusD._3DSCPlusDummy
                     continue;
                 }
 
-
                 int recvret;
                 try
                 {
@@ -102,7 +102,6 @@ namespace MarcusD._3DSCPlusDummy
                 }
 
                 if (recvret <= 0) continue;
-
 
                 if (!(dummyaddr_in is IPEndPoint))
                 {
@@ -155,10 +154,15 @@ namespace MarcusD._3DSCPlusDummy
                         short sx = (short)(buf[16] | (buf[17] << 8));
                         short sy = (short)(buf[18] | (buf[19] << 8));
 
-                        if (Math.Abs(cx) < deadzone) cx = 0;
-                        if (Math.Abs(cy) < deadzone) cy = 0;
-                        if (Math.Abs(sx) < deadzone) sx = 0;
-                        if (Math.Abs(sy) < deadzone) sy = 0;
+                        if (Math.Abs(cx) < LeftStickSettings.DeadzoneX) cx = 0;
+                        if (Math.Abs(cy) < LeftStickSettings.DeadzoneY) cy = 0;
+                        if (Math.Abs(sx) < RightStickSettings.DeadzoneX) sx = 0;
+                        if (Math.Abs(sy) < RightStickSettings.DeadzoneY) sy = 0;
+
+                        cx *= (short)(LeftStickSettings.InvertX ? -1 : 1);
+                        cy *= (short)(LeftStickSettings.InvertY ? -1 : 1);
+                        sx *= (short)(RightStickSettings.InvertX ? -1 : 1);
+                        sy *= (short)(RightStickSettings.InvertY ? -1 : 1);
 
                         //if (Debug) Console.WriteLine($"[IN] K: {currkey:X8} T: {tx:+000;-000;0000}x{ty:+000;-000;0000} C: {cx:+000;-000;0000}x{cy:+000;-000;0000} S: {sx:+000;-000;0000}x{sy:+000;-000;0000}");
 
@@ -188,6 +192,11 @@ namespace MarcusD._3DSCPlusDummy
                         cy = KeyToAxis(inputs, N3DSInputs.LeftStickDown, N3DSInputs.LeftStickUp, MaxLeftAxisValue);
                         sx = KeyToAxis(inputs, N3DSInputs.RightStickLeft, N3DSInputs.RightStickRight, MaxRightAxisValue);
                         sy = KeyToAxis(inputs, N3DSInputs.RightStickDown, N3DSInputs.RightStickUp, MaxRightAxisValue);
+
+                        cx *= (short)(LeftStickSettings.InvertX ? -1 : 1);
+                        cy *= (short)(LeftStickSettings.InvertY ? -1 : 1);
+                        sx *= (short)(RightStickSettings.InvertX ? -1 : 1);
+                        sy *= (short)(RightStickSettings.InvertY ? -1 : 1);
 
                         if (Debug) Console.WriteLine($"[KX] K: {currkey:X8} Inputs: {inputs}");
 
