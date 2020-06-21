@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Eveldee._3DSCPlusViGEm"
         mc:Ignorable="d"
-        Title="3DSCPlusViGEm" Height="95" Width="300"
+        Title="3DSCPlusViGEm" Height="120" Width="300"
         ResizeMode="NoResize">
     <GroupBox Margin="2" Header="Connexion">
         <Grid>
@@ -13,8 +13,16 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="80" />
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="Txt_IP" Grid.Column="0" Margin="0,0,5,0" VerticalContentAlignment="Center" />
-            <Button x:Name="Btn_Toggle" Grid.Column="1" Content="Connect" Padding="4" Click="Btn_Toggle_Click" />
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBox x:Name="Txt_IP" Grid.Column="0" Grid.Row="0"
+                     Margin="0,0,5,0" VerticalContentAlignment="Center" />
+            <Button x:Name="Btn_Toggle" Grid.Column="1" Grid.Row="0"
+                    Content="Connect" Padding="4" Click="Btn_Toggle_Click" />
+            <ComboBox x:Name="Picker_TargetType" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1"
+                      Margin="0,5,0,0" />
         </Grid>
     </GroupBox>
 </Window>

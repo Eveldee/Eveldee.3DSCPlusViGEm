@@ -1,6 +1,8 @@
-﻿using MarcusD._3DSCPlusDummy;
+﻿using Eveldee._3DSCPlusViGEm.Utils;
+using MarcusD._3DSCPlusDummy;
 using Nefarius.ViGEm.Client;
 using Nefarius.ViGEm.Client.Targets;
+using Nefarius.ViGEm.Client.Targets.DualShock4;
 using Nefarius.ViGEm.Client.Targets.Xbox360;
 using System;
 using System.Collections.Generic;
@@ -18,7 +20,7 @@ namespace Eveldee._3DSCPlusViGEm
         public const short RightStickMultiplier = 224;
 
         private readonly ViGEmClient _viGEmClient;
-        private IXbox360Controller _controller;
+        private IVirtualGamepad _controller;
         private Dummy _dummy;
         private CancellationTokenSource _connectToken;
         private CancellationTokenSource _disconnectToken;
@@ -41,7 +43,7 @@ namespace Eveldee._3DSCPlusViGEm
 
         public async Task Start(IPAddress iPAddress)
         {
-            _controller = _viGEmClient.CreateXbox360Controller();
+            _controller = MainWindow.Settings.TargetType == TargetType.Xbox360 ? (IVirtualGamepad)_viGEmClient.CreateXbox360Controller() : _viGEmClient.CreateDualShock4Controller();
             _controller.AutoSubmitReport = false;
             _controller.Connect();
 
@@ -67,32 +69,105 @@ namespace Eveldee._3DSCPlusViGEm
         {
             dummyState.Inputs.With(i =>
             {
-                _controller.SetButtonState(Xbox360Button.A, i.B);
-                _controller.SetButtonState(Xbox360Button.B, i.A);
-                _controller.SetButtonState(Xbox360Button.X, i.Y);
-                _controller.SetButtonState(Xbox360Button.Y, i.X);
+                if (_controller is IXbox360Controller xbox360)
+                {
+                    xbox360.SetButtonState(Xbox360Button.A, i.B);
+                    xbox360.SetButtonState(Xbox360Button.B, i.A);
+                    xbox360.SetButtonState(Xbox360Button.X, i.Y);
+                    xbox360.SetButtonState(Xbox360Button.Y, i.X);
 
-                _controller.SetButtonState(Xbox360Button.Left, i.Left);
-                _controller.SetButtonState(Xbox360Button.Up, i.Up);
-                _controller.SetButtonState(Xbox360Button.Down, i.Down);
-                _controller.SetButtonState(Xbox360Button.Right, i.Right);
+                    xbox360.SetButtonState(Xbox360Button.Left, i.Left);
+                    xbox360.SetButtonState(Xbox360Button.Up, i.Up);
+                    xbox360.SetButtonState(Xbox360Button.Down, i.Down);
+                    xbox360.SetButtonState(Xbox360Button.Right, i.Right);
 
-                _controller.SetButtonState(Xbox360Button.LeftShoulder, i.L);
-                _controller.SetButtonState(Xbox360Button.RightShoulder, i.R);
+                    xbox360.SetButtonState(Xbox360Button.LeftShoulder, i.L);
+                    xbox360.SetButtonState(Xbox360Button.RightShoulder, i.R);
 
-                _controller.SetSliderValue(Xbox360Slider.LeftTrigger, i.ZL ? byte.MaxValue : byte.MinValue);
-                _controller.SetSliderValue(Xbox360Slider.RightTrigger, i.ZR ? byte.MaxValue : byte.MinValue);
+                    xbox360.SetSliderValue(Xbox360Slider.LeftTrigger, i.ZL ? byte.MaxValue : byte.MinValue);
+                    xbox360.SetSliderValue(Xbox360Slider.RightTrigger, i.ZR ? byte.MaxValue : byte.MinValue);
 
-                _controller.SetButtonState(Xbox360Button.Start, i.Start);
-                _controller.SetButtonState(Xbox360Button.Back, i.Select);
+                    xbox360.SetButtonState(Xbox360Button.Start, i.Start);
+                    xbox360.SetButtonState(Xbox360Button.Back, i.Select);
 
-                _controller.SetAxisValue(Xbox360Axis.LeftThumbX, (short)(i.LeftStickX * LeftStickMultiplier));
-                _controller.SetAxisValue(Xbox360Axis.LeftThumbY, (short)(i.LeftStickY * LeftStickMultiplier));
+                    xbox360.SetAxisValue(Xbox360Axis.LeftThumbX, (short)(i.LeftStickX * LeftStickMultiplier));
+                    xbox360.SetAxisValue(Xbox360Axis.LeftThumbY, (short)(i.LeftStickY * LeftStickMultiplier));
 
-                _controller.SetAxisValue(Xbox360Axis.RightThumbX, (short)(i.RightStickX * RightStickMultiplier));
-                _controller.SetAxisValue(Xbox360Axis.RightThumbY, (short)(i.RightStickY * RightStickMultiplier));
+                    xbox360.SetAxisValue(Xbox360Axis.RightThumbX, (short)(i.RightStickX * RightStickMultiplier));
+                    xbox360.SetAxisValue(Xbox360Axis.RightThumbY, (short)(i.RightStickY * RightStickMultiplier));
 
-                _controller.SetButtonState(Xbox360Button.Guide, i.IsTouch);
+                    xbox360.SetButtonState(Xbox360Button.Guide, i.IsTouch);
+                }
+                else if (_controller is IDualShock4Controller ds4)
+                {
+                    ds4.SetButtonState(DualShock4Button.Cross, i.B);
+                    ds4.SetButtonState(DualShock4Button.Circle, i.A);
+                    ds4.SetButtonState(DualShock4Button.Square, i.Y);
+                    ds4.SetButtonState(DualShock4Button.Triangle, i.X);
+
+                    // TODO: set dpad
+                    if (i.Up)
+                    {
+                        if (i.Left)
+                        {
+                            ds4.SetDPadDirection(DualShock4DPadDirection.Northwest);
+                        }
+                        else if (i.Right)
+                        {
+                            ds4.SetDPadDirection(DualShock4DPadDirection.Northeast);
+                        }
+                        else
+                        {
+                            ds4.SetDPadDirection(DualShock4DPadDirection.North);
+                        }
+                    }
+                    else if (i.Down)
+                    {
+                        if (i.Left)
+                        {
+                            ds4.SetDPadDirection(DualShock4DPadDirection.Southwest);
+                        }
+                        else if (i.Right)
+                        {
+                            ds4.SetDPadDirection(DualShock4DPadDirection.Southeast);
+                        }
+                        else
+                        {
+                            ds4.SetDPadDirection(DualShock4DPadDirection.South);
+                        }
+                    }
+                    else if (i.Left)
+                    {
+                        ds4.SetDPadDirection(DualShock4DPadDirection.West);
+                    }
+                    else if (i.Right)
+                    {
+                        ds4.SetDPadDirection(DualShock4DPadDirection.East);
+                    }
+                    else
+                    {
+                        ds4.SetDPadDirection(DualShock4DPadDirection.None);
+                    }
+
+                    ds4.SetButtonState(DualShock4Button.ShoulderLeft, i.L);
+                    ds4.SetButtonState(DualShock4Button.ShoulderRight, i.R);
+
+                    ds4.SetSliderValue(DualShock4Slider.LeftTrigger, i.ZL ? byte.MaxValue : byte.MinValue);
+                    ds4.SetSliderValue(DualShock4Slider.RightTrigger, i.ZR ? byte.MaxValue : byte.MinValue);
+                    ds4.SetButtonState(DualShock4Button.TriggerLeft, i.ZL);
+                    ds4.SetButtonState(DualShock4Button.TriggerRight, i.ZR);
+
+                    ds4.SetButtonState(DualShock4Button.Options, i.Start);
+                    ds4.SetButtonState(DualShock4Button.Share, i.Select);
+
+                    ds4.SetAxisValue(DualShock4Axis.LeftThumbX.Id, (short)(i.LeftStickX * LeftStickMultiplier));
+                    ds4.SetAxisValue(DualShock4Axis.LeftThumbY.Id, (short)(i.LeftStickY * LeftStickMultiplier * -1));
+
+                    ds4.SetAxisValue(DualShock4Axis.RightThumbX.Id, (short)(i.RightStickX * RightStickMultiplier));
+                    ds4.SetAxisValue(DualShock4Axis.RightThumbY.Id, (short)(i.RightStickY * RightStickMultiplier * -1));
+
+                    ds4.SetButtonState(DualShock4SpecialButton.Ps, i.IsTouch);
+                }
             });
 
             dummyState.Touch.With(t =>

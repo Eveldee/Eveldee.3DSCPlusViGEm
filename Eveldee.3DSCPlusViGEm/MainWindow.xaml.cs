@@ -24,7 +24,9 @@ namespace Eveldee._3DSCPlusViGEm
     /// </summary>
     public partial class MainWindow : Window
     {
-        public const string SettingsPath = "settings.yaml";
+        public const string SettingsPath = "Settings.yaml";
+
+        public static Settings Settings { get; set; }
 
         private bool _isActivated = false;
         private readonly Controller _controller;
@@ -41,6 +43,9 @@ namespace Eveldee._3DSCPlusViGEm
             _deserializer = new Deserializer();
 
             LoadSettings();
+
+            Picker_TargetType.ItemsSource = Enum.GetValues(typeof(TargetType));
+            Picker_TargetType.SelectedItem = _settings.TargetType;
 
             _controller = new Controller();
 
@@ -63,6 +68,8 @@ namespace Eveldee._3DSCPlusViGEm
             {
                 _settings = new Settings();
             }
+
+            Settings = _settings;
         }
 
         private async Task SaveSettings()
@@ -105,6 +112,7 @@ namespace Eveldee._3DSCPlusViGEm
                 return;
             }
 
+            _settings.TargetType = (TargetType)Picker_TargetType.SelectedItem;
             _settings.IP = Txt_IP.Text;
             await SaveSettings();
 
