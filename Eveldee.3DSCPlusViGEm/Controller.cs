@@ -24,10 +24,12 @@ namespace Eveldee._3DSCPlusViGEm
         private Dummy _dummy;
         private CancellationTokenSource _connectToken;
         private CancellationTokenSource _disconnectToken;
+        private StickSettings _stickSettings;
 
         public Controller()
         {
             _viGEmClient = new ViGEmClient();
+            _stickSettings = MainWindow.Instance.StickSettings;
         }
 
         public void Dispose()
@@ -90,12 +92,12 @@ namespace Eveldee._3DSCPlusViGEm
                     xbox360.SetButtonState(Xbox360Button.Start, i.Start);
                     xbox360.SetButtonState(Xbox360Button.Back, i.Select);
 
-                    xbox360.SetAxisValue(Xbox360Axis.LeftThumbX, AmplifyStick(i.LeftStickX, LeftStickMultiplier));
-                    xbox360.SetAxisValue(Xbox360Axis.LeftThumbY, AmplifyStick(i.LeftStickY, LeftStickMultiplier));
+                    xbox360.SetAxisValue(Xbox360Axis.LeftThumbX, AmplifyStick(i.LeftStickX, LeftStickMultiplier * _stickSettings.Left.SensibiltyX));
+                    xbox360.SetAxisValue(Xbox360Axis.LeftThumbY, AmplifyStick(i.LeftStickY, LeftStickMultiplier * _stickSettings.Left.SensibiltyY));
                     xbox360.SetButtonState(Xbox360Button.LeftThumb, i.LeftStick);
 
-                    xbox360.SetAxisValue(Xbox360Axis.RightThumbX, AmplifyStick(i.RightStickX, RightStickMultiplier));
-                    xbox360.SetAxisValue(Xbox360Axis.RightThumbY, AmplifyStick(i.RightStickY, RightStickMultiplier));
+                    xbox360.SetAxisValue(Xbox360Axis.RightThumbX, AmplifyStick(i.RightStickX, RightStickMultiplier * _stickSettings.Right.SensibiltyX));
+                    xbox360.SetAxisValue(Xbox360Axis.RightThumbY, AmplifyStick(i.RightStickY, RightStickMultiplier * _stickSettings.Right.SensibiltyY));
                     xbox360.SetButtonState(Xbox360Button.RightThumb, i.RightStick);
 
                     xbox360.SetButtonState(Xbox360Button.Guide, i.IsTouch);
@@ -161,12 +163,12 @@ namespace Eveldee._3DSCPlusViGEm
                     ds4.SetButtonState(DualShock4Button.Options, i.Start);
                     ds4.SetButtonState(DualShock4Button.Share, i.Select);
 
-                    ds4.SetAxisValue(DualShock4Axis.LeftThumbX.Id, AmplifyStick(i.LeftStickX, LeftStickMultiplier));
-                    ds4.SetAxisValue(DualShock4Axis.LeftThumbY.Id, AmplifyStick(i.LeftStickY, LeftStickMultiplier, true));
+                    ds4.SetAxisValue(DualShock4Axis.LeftThumbX.Id, AmplifyStick(i.LeftStickX, LeftStickMultiplier * _stickSettings.Left.SensibiltyX));
+                    ds4.SetAxisValue(DualShock4Axis.LeftThumbY.Id, AmplifyStick(i.LeftStickY, LeftStickMultiplier * _stickSettings.Left.SensibiltyY, true));
                     ds4.SetButtonState(DualShock4Button.ThumbLeft, i.LeftStick);
 
-                    ds4.SetAxisValue(DualShock4Axis.RightThumbX.Id, AmplifyStick(i.RightStickX, RightStickMultiplier));
-                    ds4.SetAxisValue(DualShock4Axis.RightThumbY.Id, AmplifyStick(i.RightStickY, RightStickMultiplier, true));
+                    ds4.SetAxisValue(DualShock4Axis.RightThumbX.Id, AmplifyStick(i.RightStickX, RightStickMultiplier * _stickSettings.Right.SensibiltyX));
+                    ds4.SetAxisValue(DualShock4Axis.RightThumbY.Id, AmplifyStick(i.RightStickY, RightStickMultiplier * _stickSettings.Right.SensibiltyY, true));
                     ds4.SetButtonState(DualShock4Button.ThumbRight, i.RightStick);
 
                     ds4.SetButtonState(DualShock4SpecialButton.Ps, i.IsTouch);
@@ -185,9 +187,9 @@ namespace Eveldee._3DSCPlusViGEm
             }
         }
 
-        private short AmplifyStick(short stickValue, short multiplier, bool reverse = false)
+        private short AmplifyStick(int stickValue, double multiplier, bool reverse = false)
         {
-            int value = Math.Abs(stickValue * multiplier);
+            double value = Math.Abs(stickValue * multiplier);
 
             if (value > short.MaxValue)
             {

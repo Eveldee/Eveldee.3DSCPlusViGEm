@@ -14,6 +14,8 @@ namespace Eveldee._3DSCPlusViGEm
             public bool InvertY { get; set; }
             public int DeadzoneX { get; set; } = 12;
             public int DeadzoneY { get; set; } = 12;
+            public double SensibiltyX { get; set; } = 1.0;
+            public double SensibiltyY { get; set; } = 1.0;
         }
 
         public AxisSettings Left { get; set; }
