@@ -41,7 +41,7 @@ namespace Eveldee._3DSCPlusViGEm
         private readonly Serializer _serializer;
         private readonly Deserializer _deserializer;
         private FileSystemWatcher _settingsWatcher;
-        private object _keyMapLock = new object();
+        private object _settingsLock = new object();
 
         public MainWindow()
         {
@@ -157,7 +157,7 @@ namespace Eveldee._3DSCPlusViGEm
                 NotifyFilter = NotifyFilters.LastWrite,
                 IncludeSubdirectories = false
             };
-            _settingsWatcher.Changed += OnKeyMapChange;
+            _settingsWatcher.Changed += OnSettingsChange;
             _settingsWatcher.EnableRaisingEvents = true;
         }
 
@@ -171,10 +171,10 @@ namespace Eveldee._3DSCPlusViGEm
             }
         }
 
-        private void OnKeyMapChange(object sender, FileSystemEventArgs e)
+        private void OnSettingsChange(object sender, FileSystemEventArgs e)
         {
             // Note that softwares like Notepad++ fires this event 2 times, nothing much can be done about it
-            lock (_keyMapLock)
+            lock (_settingsLock)
             {
                 try
                 {
