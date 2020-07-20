@@ -27,6 +27,7 @@ namespace Eveldee._3DSCPlusViGEm
         public const string SettingsPath = "Settings.yml";
         public const string KeyMapPath = "KeyMap.yml";
         public const string StickSettingsPath = "Sticks.yml";
+        public const string TouchMapsPath = "TouchMaps.yml";
         public const string LogPath = "Logs.txt";
 
         public static MainWindow Instance { get; private set; }
@@ -34,6 +35,7 @@ namespace Eveldee._3DSCPlusViGEm
         public Settings Settings { get; private set; }
         public Dictionary<N3DSInputs, N3DSInputs> KeyMap { get; private set; }
         public StickSettings StickSettings { get; private set; }
+        public IEnumerable<TouchMap> TouchMaps { get; private set; }
 
         private bool _isActivated = false;
         private readonly Controller _controller;
@@ -152,6 +154,21 @@ namespace Eveldee._3DSCPlusViGEm
                 File.WriteAllText(StickSettingsPath, _serializer.Serialize(StickSettings));
             }
 
+            // Load TouchAreaMaps
+            if (File.Exists(TouchMapsPath))
+            {
+                string text = File.ReadAllText(TouchMapsPath);
+
+                TouchMaps = _deserializer.Deserialize<List<TouchMap>>(text);
+            }
+            else
+            {
+                TouchMaps = new List<TouchMap>();
+
+                File.WriteAllText(TouchMapsPath, _serializer.Serialize(TouchMaps));
+            }
+
+            // Watcher
             _settingsWatcher = new FileSystemWatcher(Environment.CurrentDirectory, "*.yml")
             {
                 NotifyFilter = NotifyFilters.LastWrite,
@@ -191,6 +208,11 @@ namespace Eveldee._3DSCPlusViGEm
                             text = File.ReadAllText(StickSettingsPath);
 
                             StickSettings = _deserializer.Deserialize<StickSettings>(text);
+                            break;
+                        case TouchMapsPath:
+                            text = File.ReadAllText(TouchMapsPath);
+
+                            TouchMaps = _deserializer.Deserialize<List<TouchMap>>(text);
                             break;
                     }
                 }

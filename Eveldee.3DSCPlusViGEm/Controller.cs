@@ -175,12 +175,6 @@ namespace Eveldee._3DSCPlusViGEm
                 }
             });
 
-            dummyState.Touch.With(t =>
-            {
-                // Maybe Stick Press on touch side
-                // Will have to see with config
-            });
-
             if (_dummy.Running)
             {
                 _controller.SubmitReport();

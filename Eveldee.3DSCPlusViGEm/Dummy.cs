@@ -33,8 +33,10 @@ namespace MarcusD._3DSCPlusDummy
         public Dictionary<N3DSInputs, N3DSInputs> KeyMap => MainWindow.Instance.KeyMap;
         public StickSettings.AxisSettings LeftStickSettings => MainWindow.Instance.StickSettings.Left;
         public StickSettings.AxisSettings RightStickSettings => MainWindow.Instance.StickSettings.Right;
+        public IEnumerable<TouchMap> TouchMaps => MainWindow.Instance.TouchMaps;
 
         private bool dcexit = false;
+        private DummyState.TouchState _lastTouchExState;
 
         private IPAddress _remoteIP;
 
@@ -164,17 +166,24 @@ namespace MarcusD._3DSCPlusDummy
                         sx *= (short)(RightStickSettings.InvertX ? -1 : 1);
                         sy *= (short)(RightStickSettings.InvertY ? -1 : 1);
 
-                        //if (Debug) Console.WriteLine($"[IN] K: {currkey:X8} T: {tx:+000;-000;0000}x{ty:+000;-000;0000} C: {cx:+000;-000;0000}x{cy:+000;-000;0000} S: {sx:+000;-000;0000}x{sy:+000;-000;0000}");
+                        if (Debug) Console.WriteLine($"[IN] K: {currkey:X8} T: {tx:+000;-000;0000}x{ty:+000;-000;0000} C: {cx:+000;-000;0000}x{cy:+000;-000;0000} S: {sx:+000;-000;0000}x{sy:+000;-000;0000}");
 
                         N3DSInputs inputs = (N3DSInputs)currkey;
-                        if (Debug) Console.WriteLine($"[Inputs] {inputs}");
+                        //if (Debug) Console.WriteLine($"[Inputs] {inputs}");
+
+                        var inputState = CreateStateFromInputs(inputs, cx, cy, sx, sy);
+
+                        if (inputs.HasFlag(N3DSInputs.Touch))
+                        {
+                            ApplyTouchMapToState(inputState, tx, ty, isEx: false);
+                        }
 
                         StateChanged?.Invoke(this, new DummyState()
                         {
-                            Inputs = CreateStateFromInputs(inputs, cx, cy, sx, sy),
+                            Inputs = inputState,
                             Touch = new DummyState.TouchState()
                             {
-                                IsTouch = IsPressed(N3DSInputs.Touch, inputs),
+                                IsTouch = inputs.HasFlag(N3DSInputs.Touch),
                                 TouchX = tx,
                                 TouchY = ty
                             }
@@ -200,9 +209,16 @@ namespace MarcusD._3DSCPlusDummy
 
                         if (Debug) Console.WriteLine($"[KX] K: {currkey:X8} Inputs: {inputs}");
 
+                        inputState = CreateStateFromInputs(inputs, cx, cy, sx, sy);
+
+                        if (_lastTouchExState != null && _lastTouchExState.IsTouch)
+                        {
+                            ApplyTouchMapToState(inputState, _lastTouchExState.TouchX, _lastTouchExState.TouchY, isEx: true);
+                        }
+
                         StateChanged?.Invoke(this, new DummyState()
                         {
-                            Inputs = CreateStateFromInputs(inputs, cx, cy, sx, sy)
+                            Inputs = inputState
                         });
 
                         break;
@@ -212,16 +228,19 @@ namespace MarcusD._3DSCPlusDummy
                         short rtx = (short)(buf[4] | (buf[5] << 8));
                         short rty = (short)(buf[6] | (buf[7] << 8));
 
-                        if (Debug) Console.WriteLine($"[TX] X: {rtx:X4} Y: {rty:X4} Touch: {isTouch}");
+                        //if (Debug) Console.WriteLine($"[TX] X: {rtx:X4} Y: {rty:X4} Touch: {isTouch}");
+                        if (Debug) Console.WriteLine($"[TX] X: {rtx} Y: {rty} Touch: {isTouch}");
+
+                        _lastTouchExState = new DummyState.TouchState()
+                        {
+                            IsTouch = isTouch,
+                            TouchX = rtx,
+                            TouchY = rty
+                        };
 
                         StateChanged?.Invoke(this, new DummyState()
                         {
-                            Touch = new DummyState.TouchState()
-                            {
-                                IsTouch = isTouch,
-                                TouchX = rtx,
-                                TouchY = rty
-                            }
+                            Touch = _lastTouchExState
                         });
 
                         break;
@@ -301,6 +320,46 @@ namespace MarcusD._3DSCPlusDummy
 
                 IsTouch = IsPressed(N3DSInputs.Touch, inputs)
             };
+        }
+
+        private void ApplyTouchMapToState(DummyState.InputState inputState, int touchX, int touchY, bool isEx)
+        {
+            double xMax = isEx ? 4096 : 320;
+            double yMax = isEx ? 4096 : 240;
+            double x = touchX / xMax;
+            double y = touchY / yMax;
+
+            foreach (var touchMap in TouchMaps.Where(touchMap => touchMap.HasValidArea()))
+            {
+                // Check if in area
+                if (x >= touchMap.X1 && x < touchMap.X2 && y >= touchMap.Y1 && y < touchMap.Y2)
+                {
+                    var inputs = touchMap.Inputs;
+
+                    inputState.LeftStick = inputs.HasFlag(N3DSInputs.LeftStick) || inputState.LeftStick;
+                    inputState.RightStick = inputs.HasFlag(N3DSInputs.RightStick) || inputState.RightStick;
+
+                    inputState.A = inputs.HasFlag(N3DSInputs.A) || inputState.A;
+                    inputState.B = inputs.HasFlag(N3DSInputs.B) || inputState.B;
+                    inputState.X = inputs.HasFlag(N3DSInputs.X) || inputState.X;
+                    inputState.Y = inputs.HasFlag(N3DSInputs.Y) || inputState.Y;
+
+                    inputState.Left = inputs.HasFlag(N3DSInputs.Left) || inputState.Left;
+                    inputState.Up = inputs.HasFlag(N3DSInputs.Up) || inputState.Up;
+                    inputState.Right = inputs.HasFlag(N3DSInputs.Right) || inputState.Right;
+                    inputState.Down = inputs.HasFlag(N3DSInputs.Down) || inputState.Down;
+
+                    inputState.L = inputs.HasFlag(N3DSInputs.L) || inputState.L;
+                    inputState.R = inputs.HasFlag(N3DSInputs.R) || inputState.R;
+                    inputState.ZL = inputs.HasFlag(N3DSInputs.ZL) || inputState.ZL;
+                    inputState.ZR = inputs.HasFlag(N3DSInputs.ZR) || inputState.ZR;
+
+                    inputState.Start = inputs.HasFlag(N3DSInputs.Start) || inputState.Start;
+                    inputState.Select = inputs.HasFlag(N3DSInputs.Select) || inputState.Select;
+
+                    inputState.IsTouch = inputs.HasFlag(N3DSInputs.Touch) || inputState.IsTouch;
+                }
+            }
         }
     }
 }
